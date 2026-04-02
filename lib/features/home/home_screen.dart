@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/products/providers/products_provider.dart';
+import '../products/providers/products_provider.dart';
+import '../products/presentation/widgets/product_card.dart';
+import '../products/presentation/favorites_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsyncValue = ref.watch(productsProvider);
+    final productsAsync = ref.watch(productsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Shop App')),
-      body: productsAsyncValue.when(
+      appBar: AppBar(
+        title: const Text('ShopSmart'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            },
+            icon: const Icon(Icons.favorite),
+          ),
+        ],
+      ),
+      body: productsAsync.when(
         data: (products) {
           return GridView.builder(
             padding: const EdgeInsets.all(12),
@@ -24,43 +40,13 @@ class HomeScreen extends ConsumerWidget {
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
-
-              return Card(
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Image.network(
-                        product.image,
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        product.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        '\$${product.price}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return ProductCard(product: product);
             },
           );
         },
-
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error loading products')),
+        error: (err, stack) =>
+            const Center(child: Text('Error loading products')),
       ),
     );
   }
